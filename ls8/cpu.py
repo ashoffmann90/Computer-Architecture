@@ -11,6 +11,16 @@ class CPU:
         self.pc = 0
         self.ram = [0] * 256
         self.reg = [0] * 8
+        # self.ir = {
+        #     0b10000010: 'LDI',
+        #     0b01000111: 'PRN',
+        #     0b00000001: 'HLT'
+        # }
+        self.ir = {
+            'LDI': 0b10000010,
+            'PRN': 0b01000111,
+            'HLT': 0b00000001
+        }
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -68,6 +78,27 @@ class CPU:
 
         print()
 
+    def ldi(self, register, value):
+        self.reg[register] = value
+
     def run(self):
         """Run the CPU."""
-        IR = self.pc
+
+        running = True
+        while running:
+            inst_reg = self.ram_read(self.pc)
+            operand_a = self.ram_read(self.pc+1)
+            operand_b = self.ram_read(self.pc+2)
+            if inst_reg == 'LDI':
+                # print('LDI')
+                self.reg[operand_a] = operand_b
+                self.pc += 3
+            elif inst_reg == 'PRN':
+                print(operand_a)
+                self.pc += 2
+            elif inst_reg == 'HLT':
+                self.ram_read(self.pc)
+                self.pc += 1
+                running = False
+
+        # print(self.ir['LDI'])
