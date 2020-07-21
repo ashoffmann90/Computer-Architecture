@@ -16,11 +16,11 @@ class CPU:
         #     0b01000111: 'PRN',
         #     0b00000001: 'HLT'
         # }
-        self.ir = {
-            'LDI': 0b10000010,
-            'PRN': 0b01000111,
-            'HLT': 0b00000001
-        }
+        # self.ir = {
+        #     'LDI': 0b10000010,
+        #     'PRN': 0b01000111,
+        #     'HLT': 0b00000001
+        # }
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -81,23 +81,35 @@ class CPU:
     def ldi(self, register, value):
         self.reg[register] = value
 
+    def prn(self, index):
+        print(self.reg[index])
+
+    def hlt(self):
+        sys.exit(0)
+
     def run(self):
         """Run the CPU."""
-
+        # number of operands = inst value & 0b11000000 >> 6
+        # inst length = number of operands + 1
+        LDI = 0b10000010
+        PRN = 0b01000111
+        HLT = 0b00000001
         running = True
-        while running:
+        # self.trace()
+        while running is True:
             inst_reg = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
-            if inst_reg == 'LDI':
+            if inst_reg == LDI:
                 # print('LDI')
-                self.reg[operand_a] = operand_b
+                # self.reg[operand_a] = operand_b
+                self.ldi(operand_a, operand_b)
                 self.pc += 3
-            elif inst_reg == 'PRN':
-                print(operand_a)
+            elif inst_reg == PRN:
+                self.prn(operand_a)
                 self.pc += 2
-            elif inst_reg == 'HLT':
-                self.ram_read(self.pc)
+            elif inst_reg == HLT:
+                self.hlt()
                 self.pc += 1
                 running = False
 
