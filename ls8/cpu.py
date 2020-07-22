@@ -18,7 +18,8 @@ class CPU:
         self.ir = {
             'LDI': 0b10000010,
             'PRN': 0b01000111,
-            'HLT': 0b00000001
+            'HLT': 0b00000001,
+            'MUL': 0b10100010
         }
         self.branchtable = {}
         self.branchtable[HLT] = self.hlt
@@ -54,29 +55,29 @@ class CPU:
 
         # For now, we've just hardcoded a program:
 
-        program = '''
-        # Print the number 8
+        # program = '''
+        # # Print the number 8
 
-        # This comment and blank line is here to make sure
-        # they are handled correctly by the file reading        code.
+        # # This comment and blank line is here to make sure
+        # # they are handled correctly by the file reading        code.
 
-        10000010 # LDI R0,8
-        00000000
-        00001000
-        01000111 # PRN R0
-        00000000
-        00000001 # HLT
-        '''
+        # 10000010 # LDI R0,8
+        # 00000000
+        # 00001000
+        # 01000111 # PRN R0
+        # 00000000
+        # 00000001 # HLT
+        # '''
         # print(program)
         # print(program.split('\n'))
-        split = program.split('\n')
+        # split = program.split('\n')
         cleaned = []
         for line in filename:
             line1 = line.strip()
             if not line1.startswith('#') and line1.strip():
                 line2 = line1.split('#', 1)[0]
                 cleaned.append(int(line2, 2))
-                print(line2)
+                # print(line2)
 
         # for line in program:
         #     try:
@@ -109,6 +110,8 @@ class CPU:
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         # elif op == "SUB": etc
+        elif op == 'MUL':
+            self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -145,7 +148,8 @@ class CPU:
         self.pc += 1
 
     def mul(self, a, b):
-        return self.reg[a] * self.reg[b]
+        self.alu('MUL', a, b)
+        # self.pc += 3
 
     def run(self):
         """Run the CPU."""
@@ -161,6 +165,21 @@ class CPU:
             inst_reg = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
+
+            print('inst_reg: ', inst_reg)
+            # print('blah', self.ir[])
+            for k, v in self.ir.items():
+                # print('v', v)
+                if inst_reg == v:
+                    print('something')
+                    inst = bin(v)
+                    print('inst: ', inst)
+            print('inst_out_of_loop', inst)
+            mask = int(inst, 2) & 0b11000000
+            mask2 = mask >> 6
+            op = mask2 + 1
+            print('op: ', op)
+
             if inst_reg in self.branchtable:
                 self.branchtable[inst_reg](operand_a, operand_b)
 

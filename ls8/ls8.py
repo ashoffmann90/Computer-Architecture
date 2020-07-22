@@ -11,6 +11,7 @@ code = filename.readlines()
 filename.close()
 cpu = CPU()
 cpu.load(code)
+cpu.run()
 
 # try:
 #     cpu.load(filename)
