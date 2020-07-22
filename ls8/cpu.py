@@ -4,6 +4,7 @@ import sys
 LDI = 0b10000010
 PRN = 0b01000111
 HLT = 0b00000001
+MUL = 0b10100010
 
 
 class CPU:
@@ -23,6 +24,7 @@ class CPU:
         self.branchtable[HLT] = self.hlt
         self.branchtable[LDI] = self.ldi
         self.branchtable[PRN] = self.prn
+        self.branchtable[MUL] = self.mul
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -141,6 +143,9 @@ class CPU:
     def hlt(self, x, y):
         sys.exit(0)
         self.pc += 1
+
+    def mul(self, a, b):
+        return self.reg[a] * self.reg[b]
 
     def run(self):
         """Run the CPU."""
