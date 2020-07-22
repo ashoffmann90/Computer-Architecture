@@ -15,6 +15,7 @@ class CPU:
         self.pc = 0
         self.ram = [0] * 256
         self.reg = [0] * 8
+        self.set_pc = False
         self.ir = {
             'LDI': 0b10000010,
             'PRN': 0b01000111,
@@ -137,15 +138,15 @@ class CPU:
 
     def ldi(self, register, value):
         self.reg[register] = value
-        self.pc += 3
+        # self.pc += 3
 
     def prn(self, register, x):
         print(self.reg[register])
-        self.pc += 2
+        # self.pc += 2
 
     def hlt(self, x, y):
         sys.exit(0)
-        self.pc += 1
+        # self.pc += 1
 
     def mul(self, a, b):
         self.alu('MUL', a, b)
@@ -166,19 +167,24 @@ class CPU:
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
 
-            print('inst_reg: ', inst_reg)
-            # print('blah', self.ir[])
+            # print('inst_reg: ', inst_reg)
             for k, v in self.ir.items():
                 # print('v', v)
                 if inst_reg == v:
-                    print('something')
+                    # print('something')
                     inst = bin(v)
-                    print('inst: ', inst)
-            print('inst_out_of_loop', inst)
-            mask = int(inst, 2) & 0b11000000
-            mask2 = mask >> 6
-            op = mask2 + 1
-            print('op: ', op)
+                    # print('inst: ', inst)
+            # print('inst_out_of_loop', inst)
+            # mask = int(inst, 2) & 0b11000000
+            # mask2 = mask >> 6
+            # op = mask2 + 1
+            # print('op: ', op)
+            inst_size = ((inst_reg >> 6) & 0b11) + 1
+            self.set_pc = ((inst_reg >> 4) & 0b1) == 1
+            # If the instruction didn't set the PC, just move           to the next instruction
+            if not self.set_pc:
+                # could replace inst_size           with op if using the commented out lines
+                self.pc += inst_size
 
             if inst_reg in self.branchtable:
                 self.branchtable[inst_reg](operand_a, operand_b)
