@@ -44,7 +44,7 @@ register = [0] * 8
 
 pc = 0  # Program Counter, index into memory of the current instruction
 # AKA a pointer to the current instruction
-
+# day 3
 fl = 0
 
 SP = 7
@@ -53,7 +53,7 @@ register[SP] = 0xf4
 
 PRINT_BEEJ = 1
 HALT = 2
-
+# 3
 running = True
 
 while running:
@@ -79,7 +79,7 @@ while running:
         print(register[reg_num])
 
         pc += 2
-
+# day3
     elif inst == 5:  # PUSH
         # decrement stack pointer
         register[SP] -= 1
@@ -109,7 +109,7 @@ while running:
         register[SP] += 1
 
         pc += 2
-
+# 3
     else:
         print(f"Unknown instruction {inst}")
         running = False

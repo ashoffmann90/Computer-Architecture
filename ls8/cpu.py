@@ -5,6 +5,8 @@ LDI = 0b10000010
 PRN = 0b01000111
 HLT = 0b00000001
 MUL = 0b10100010
+PUSH = 0b01000101
+POP = 0b01000110
 
 
 class CPU:
@@ -16,6 +18,8 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.set_pc = False
+        self.reg[7] = 0xf4
+        self.sp = self.reg[7]
         self.ir = {
             'LDI': 0b10000010,
             'PRN': 0b01000111,
@@ -27,6 +31,8 @@ class CPU:
         self.branchtable[LDI] = self.ldi
         self.branchtable[PRN] = self.prn
         self.branchtable[MUL] = self.mul
+        self.branchtable[PUSH] = self.push
+        self.branchtable[POP] = self.pop
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -152,6 +158,55 @@ class CPU:
         self.alu('MUL', a, b)
         # self.pc += 3
 
+    # def pop(self, x, y):
+    #     # get value from ram
+    #     mem_address = self.reg[self.sp]
+    #     val = self.ram[mem_address]
+
+    #     # store in given reg
+    #     reg_val = self.ram[self.pc + 1]
+    #     self.reg[reg_val] = val
+    #     self.pc += 2
+
+    #     # # another way?
+    #     # self.reg[self.sp] += 1
+    #     # val = self.ram_read(self.sp)
+    #     # # increment sp
+    #     # self.reg[self.sp] += 1
+    #     # return val
+
+    # def push(self, val, y):
+    #     # decrement because the stack goes downwards
+    #     self.reg[self.sp] -= 1
+
+    #     # this will keep the pointer in bounds of 00-ff
+    #     self.reg[self.sp] &= 0xff
+
+    #     # this will pull out the value at the register address
+    #     reg_val = self.ram_read(self.pc)
+    #     val = self.reg[reg_val]
+
+    #     # store that in the memory
+    #     mem_address = self.reg[self.sp]
+    #     self.ram_write(mem_address, val)
+    #     # self.pc += 2
+
+    #     # # # another way?
+    #     # self.reg[self.sp] -= 1
+    #     # self.ram_write(self.sp, val)
+
+    def push(self, operand_a, operand_b):
+        self.sp -= 1
+        # self.reg[self.sp] &= 0xff
+        val = self.reg[operand_a]
+        self.ram_write(self.sp, val)
+        # self.pc += 2
+
+    def pop(self, operand_a, operand_b):
+        self.reg[operand_a] = self.ram_read(self.sp)
+        # self.pc += 2
+        self.sp += 1
+
     def run(self):
         """Run the CPU."""
         # number of operands = inst value & 0b11000000 >> 6
@@ -163,6 +218,7 @@ class CPU:
         running = True
         # self.trace()
         while running is True:
+            # self.trace()
             inst_reg = self.ram_read(self.pc)
             operand_a = self.ram_read(self.pc+1)
             operand_b = self.ram_read(self.pc+2)
