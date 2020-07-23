@@ -7,6 +7,9 @@ HLT = 0b00000001
 MUL = 0b10100010
 PUSH = 0b01000101
 POP = 0b01000110
+CALL = 0b01010000
+RET = 0b00010001
+ADD = 0b10100000
 
 
 class CPU:
@@ -24,7 +27,14 @@ class CPU:
             'LDI': 0b10000010,
             'PRN': 0b01000111,
             'HLT': 0b00000001,
-            'MUL': 0b10100010
+            'MUL': 0b10100010,
+            'CALL': 0b01010000,
+            'RET': 0b00010001,
+            'PUSH': 0b01000101,
+            'POP': 0b01000110,
+            'CALL': 0b01010000,
+            'RET': 0b00010001,
+            'ADD': 0b10100000
         }
         self.branchtable = {}
         self.branchtable[HLT] = self.hlt
@@ -33,6 +43,9 @@ class CPU:
         self.branchtable[MUL] = self.mul
         self.branchtable[PUSH] = self.push
         self.branchtable[POP] = self.pop
+        self.branchtable[ADD] = self.add
+        self.branchtable[CALL] = self.call
+        self.branchtable[RET] = self.ret
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -157,6 +170,37 @@ class CPU:
     def mul(self, a, b):
         self.alu('MUL', a, b)
         # self.pc += 3
+
+    def add(self, a, b):
+        self.alu('ADD', a, b)
+
+    def call(self, x, y):
+        # print('pc: ', self.pc)
+
+        # push address on stack
+        # self.reg[self.sp] -= 1
+        # push_address = self.reg[self.sp]
+        # self.ram[push_address] = return_address
+
+        # get address of NEXT instruction
+        return_address = self.pc + 2
+        # self.sp is already in the register
+        # decrement to find next address for the ram
+        self.sp -= 1
+        self.ram_write(self.sp, return_address)
+
+        # set PC to subroutine address
+        reg_val = self.ram[self.pc + 1]
+        subroutine_address = self.reg[reg_val]
+
+        self.pc = subroutine_address
+
+    def ret(self, x, y):
+        # pop_address = self.reg[self.sp]
+        return_address = self.ram_read(self.sp)
+        self.sp += 1
+
+        self.pc = return_address
 
     # def pop(self, x, y):
     #     # get value from ram
