@@ -10,6 +10,17 @@ POP = 0b01000110
 CALL = 0b01010000
 RET = 0b00010001
 ADD = 0b10100000
+CMP = 0b10100111
+JMP = 0b01010100
+JEQ = 0b01010101
+JNE = 0b01010110
+AND = 0b10101000
+OR = 0b10101010
+XOR = 0b10101011
+NOT = 0b01101001
+SHL = 0b10101100
+SHR = 0b10101101
+MOD = 0b10100100
 
 
 class CPU:
@@ -23,6 +34,7 @@ class CPU:
         self.set_pc = False
         self.reg[7] = 0xf4
         self.sp = self.reg[7]
+        self.fl = None
         self.ir = {
             'LDI': 0b10000010,
             'PRN': 0b01000111,
@@ -34,7 +46,18 @@ class CPU:
             'POP': 0b01000110,
             'CALL': 0b01010000,
             'RET': 0b00010001,
-            'ADD': 0b10100000
+            'ADD': 0b10100000,
+            'CMP': 0b10100111,
+            'JMP': 0b01010100,
+            'JEQ': 0b01010101,
+            'JNE': 0b01010110,
+            'AND': 0b10101000,
+            'OR': 0b10101010,
+            'XOR': 0b10101011,
+            'NOT': 0b01101001,
+            'SHL': 0b10101100,
+            'SHR': 0b10101101,
+            'MOD': 0b10100100
         }
         self.branchtable = {}
         self.branchtable[HLT] = self.hlt
@@ -46,6 +69,17 @@ class CPU:
         self.branchtable[ADD] = self.add
         self.branchtable[CALL] = self.call
         self.branchtable[RET] = self.ret
+        self.branchtable[CMP] = self.cmp
+        self.branchtable[JMP] = self.jmp
+        self.branchtable[JEQ] = self.jeq
+        self.branchtable[JNE] = self.jne
+        self.branchtable[AND] = self.and_op
+        self.branchtable[OR] = self.or_op
+        self.branchtable[XOR] = self.xor_op
+        self.branchtable[NOT] = self.not_op
+        self.branchtable[SHL] = self.shl_op
+        self.branchtable[SHR] = self.shr_op
+        self.branchtable[MOD] = self.mod_op
 
     def ram_read(self, MAR):
         return self.ram[MAR]
@@ -58,39 +92,6 @@ class CPU:
 
         address = 0
 
-        # open file
-        # print(sys.argv)
-        # with open(sys.argv[1]) as f:
-        #     for line in f:
-        #         try:
-        #             line2 = line.split('#')[0].strip()
-        #             if line2 == '':
-        #                 continue
-        #         except ValueError:
-        #             pass
-
-        #         line3 = int(line2, 2)
-        #         self.ram[address] = line3
-        #         address += 1
-
-        # For now, we've just hardcoded a program:
-
-        # program = '''
-        # # Print the number 8
-
-        # # This comment and blank line is here to make sure
-        # # they are handled correctly by the file reading        code.
-
-        # 10000010 # LDI R0,8
-        # 00000000
-        # 00001000
-        # 01000111 # PRN R0
-        # 00000000
-        # 00000001 # HLT
-        # '''
-        # print(program)
-        # print(program.split('\n'))
-        # split = program.split('\n')
         cleaned = []
         for line in filename:
             line1 = line.strip()
@@ -98,27 +99,6 @@ class CPU:
                 line2 = line1.split('#', 1)[0]
                 cleaned.append(int(line2, 2))
                 # print(line2)
-
-        # for line in program:
-        #     try:
-        #         line2 = line.split('#')[0].strip()
-        #         if line2 == '':
-        #             continue
-        #     except ValueError:
-        #         pass
-        #     line3 = int(line2, 2)
-        #     self.ram[address] = line3
-        #     address += 1
-        # program = [
-        #     # # From print8.ls8
-        #     # 0b10000010,  # LDI R0,8
-        #     # 0b00000000,
-        #     # 0b00001000,
-        #     # 0b01000111,  # PRN R0
-        #     # 0b00000000,
-        #     # 0b00000001,  # HLT
-
-        # ]
 
         for instruction in cleaned:
             self.ram[address] = instruction
@@ -132,6 +112,32 @@ class CPU:
         # elif op == "SUB": etc
         elif op == 'MUL':
             self.reg[reg_a] = self.reg[reg_a] * self.reg[reg_b]
+        elif op == 'CMP':
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.fl = 'E'
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = 'G'
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = 'L'
+            else:
+                self.fl = 0
+        elif op == 'AND':
+            self.reg[reg_a] = self.reg[reg_a] & self.reg[reg_b]
+        elif op == 'OR':
+            self.reg[reg_a] = self.reg[reg_a] | self.reg[reg_b]
+        elif op == 'XOR':
+            self.reg[reg_a] = self.reg[reg_a] ^ self.reg[reg_b]
+        elif op == 'NOT':
+            self.reg[reg_a] = ~self.reg[reg_a]
+        elif op == 'SHL':
+            self.reg[reg_a] = self.reg[reg_a] << self.reg[reg_b]
+        elif op == 'SHR':
+            self.reg[reg_a] = self.reg[reg_a] >> self.reg[reg_b]
+        elif op == 'MOD':
+            if self.reg[reg_b] != 0:
+                self.reg[reg_a] = self.reg[reg_a] // self.reg[reg_b]
+            else:
+                print('Second input cannot be 0')
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -155,6 +161,56 @@ class CPU:
 
         print()
 
+    # ALU OPS
+
+    def cmp(self, a, b):
+        self.alu('CMP', a, b)
+
+    def mul(self, a, b):
+        self.alu('MUL', a, b)
+        # self.pc += 3
+
+    def add(self, a, b):
+        self.alu('ADD', a, b)
+
+    def and_op(self, a, b):
+        self.alu('AND', a, b)
+
+    def or_op(self, a, b):
+        self.alu('OR', a, b)
+
+    def xor_op(self, a, b):
+        self.alu('XOR', a, b)
+
+    def not_op(self, a, b):
+        self.alu('NOT', a, b)
+
+    def shl_op(self, a, b):
+        self.alu('SHL', a, b)
+
+    def shr_op(self, a, b):
+        self.alu('SHR', a, b)
+
+    def mod_op(self, a, b):
+        self.alu('MOD', a, b)
+
+    # CPU OPS
+
+    def jmp(self, x, y):
+        self.pc = self.reg[x]
+
+    def jeq(self, x, y):
+        if self.fl == 'E':
+            self.pc = self.reg[x]
+        else:
+            self.pc += 2
+
+    def jne(self, x, y):
+        if self.fl != 'E':
+            self.pc = self.reg[x]
+        else:
+            self.pc += 2
+
     def ldi(self, register, value):
         self.reg[register] = value
         # self.pc += 3
@@ -167,25 +223,10 @@ class CPU:
         sys.exit(0)
         # self.pc += 1
 
-    def mul(self, a, b):
-        self.alu('MUL', a, b)
-        # self.pc += 3
-
-    def add(self, a, b):
-        self.alu('ADD', a, b)
-
     def call(self, x, y):
-        # print('pc: ', self.pc)
-
-        # push address on stack
-        # self.reg[self.sp] -= 1
-        # push_address = self.reg[self.sp]
-        # self.ram[push_address] = return_address
-
         # get address of NEXT instruction
         return_address = self.pc + 2
-        # self.sp is already in the register
-        # decrement to find next address for the ram
+
         self.sp -= 1
         self.ram_write(self.sp, return_address)
 
@@ -202,43 +243,6 @@ class CPU:
 
         self.pc = return_address
 
-    # def pop(self, x, y):
-    #     # get value from ram
-    #     mem_address = self.reg[self.sp]
-    #     val = self.ram[mem_address]
-
-    #     # store in given reg
-    #     reg_val = self.ram[self.pc + 1]
-    #     self.reg[reg_val] = val
-    #     self.pc += 2
-
-    #     # # another way?
-    #     # self.reg[self.sp] += 1
-    #     # val = self.ram_read(self.sp)
-    #     # # increment sp
-    #     # self.reg[self.sp] += 1
-    #     # return val
-
-    # def push(self, val, y):
-    #     # decrement because the stack goes downwards
-    #     self.reg[self.sp] -= 1
-
-    #     # this will keep the pointer in bounds of 00-ff
-    #     self.reg[self.sp] &= 0xff
-
-    #     # this will pull out the value at the register address
-    #     reg_val = self.ram_read(self.pc)
-    #     val = self.reg[reg_val]
-
-    #     # store that in the memory
-    #     mem_address = self.reg[self.sp]
-    #     self.ram_write(mem_address, val)
-    #     # self.pc += 2
-
-    #     # # # another way?
-    #     # self.reg[self.sp] -= 1
-    #     # self.ram_write(self.sp, val)
-
     def push(self, operand_a, operand_b):
         self.sp -= 1
         # self.reg[self.sp] &= 0xff
@@ -253,12 +257,6 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        # number of operands = inst value & 0b11000000 >> 6
-        # inst length = number of operands + 1
-        # LDI = 0b10000010
-        # PRN = 0b01000111
-        # HLT = 0b00000001
-
         running = True
         # self.trace()
         while running is True:
@@ -274,16 +272,11 @@ class CPU:
                     # print('something')
                     inst = bin(v)
                     # print('inst: ', inst)
-            # print('inst_out_of_loop', inst)
-            # mask = int(inst, 2) & 0b11000000
-            # mask2 = mask >> 6
-            # op = mask2 + 1
-            # print('op: ', op)
             inst_size = ((inst_reg >> 6) & 0b11) + 1
             self.set_pc = ((inst_reg >> 4) & 0b1) == 1
-            # If the instruction didn't set the PC, just move           to the next instruction
+            # If the instruction didn't set the PC, just move to the next instruction
             if not self.set_pc:
-                # could replace inst_size           with op if using the commented out lines
+                # could replace inst_size with op if using the commented out lines
                 self.pc += inst_size
 
             if inst_reg in self.branchtable:
